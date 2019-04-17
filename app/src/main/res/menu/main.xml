@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <item
+        android:id="@+id/scan"
+        android:title="@string/main_menu_scan"
+        android:icon="@drawable/qr_code"
+        />
+    <item
+        android:id="@+id/add_friend"
+        android:icon="@mipmap/add_friend"
+        android:title="@string/main_menu_add_friend" />
+
+</menu>

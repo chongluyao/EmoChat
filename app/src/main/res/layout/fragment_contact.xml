@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+    <com.zhouqing.EmoChat.main.view.ListViewWidthHeader
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="@color/gray"
+        android:dividerHeight="0.2dp"
+        android:footerDividersEnabled="false"
+        android:scrollbars="none"
+        />
+
+    <com.zhouqing.EmoChat.main.view.QuickIndexBar
+        android:id="@+id/quickIndexBar"
+        android:layout_width="15dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="5dp"
+        android:background="@android:color/transparent"
+        android:paddingLeft="5dp"/>
+
+    <TextView
+        android:id="@+id/toast"
+        android:layout_width="90dp"
+        android:layout_height="60dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/background_toast"
+        android:gravity="center"
+        android:text="A"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:visibility="gone"/>
+</RelativeLayout>
+
+

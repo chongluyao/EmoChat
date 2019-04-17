@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.zhouqing.EmoChat.common.ui.view.AutoFitTextureView
+        android:id="@+id/texture"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="1"
+        android:visibility="visible"/>
+
+    <com.zhouqing.EmoChat.common.ui.view.AutoFitTextureView
+        android:id="@+id/faces"
+        android:alpha="1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"/>
+
+    <com.zhouqing.EmoChat.common.ui.view.KeyboardLinearLayout
+        android:id="@+id/ll_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorTheme"
+            android:minHeight="?attr/actionBarSize"
+            />
+
+        <Spinner
+            android:textSize="20sp"
+            android:background="@color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/sp_emotion"
+            />
+
+        <ListView
+            android:id="@+id/listview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:divider="@android:color/transparent"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:listSelector="@android:color/transparent"
+            android:transcriptMode="alwaysScroll"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorTheme"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/et_chat_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/shape_chat_background"
+                android:maxLines="2"/>
+
+            <ImageView
+                android:id="@+id/iv_emotion"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_margin="3dp"
+                android:onClick="showFrameLayout"
+                android:src="@drawable/emotion"
+                android:visibility="gone"
+                />
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp">
+
+                <Button
+                    android:id="@+id/btn_send"
+                    android:layout_width="50dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/selector_login_button"
+                    android:onClick="sendMessage"
+                    android:text="@string/chat_send"
+                    android:textSize="12dp"
+                    android:visibility="gone"/>
+
+
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/fl_emotion"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_gravity="center"
+            android:visibility="gone">
+        </FrameLayout>
+
+    </com.zhouqing.EmoChat.common.ui.view.KeyboardLinearLayout>
+</RelativeLayout>
