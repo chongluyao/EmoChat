@@ -22,7 +22,7 @@ public class Global {
 
     //项目存储文件的路径
     public static String PROJECT_FILE_PATH
-            = Environment.getExternalStorageDirectory() + "/CameraEmojiDemo/";
+            = Environment.getExternalStorageDirectory() + "/EmoChat/";
 
     public static final String[] EMOTION_ARRAY = {"Neutral","Angry","Disgust","Fear","Happy","Sad","Surprise"};
     public static final String[] CONVERSATION_ARRAY = {"场景1","场景2","场景3","场景4","场景5","场景6"};

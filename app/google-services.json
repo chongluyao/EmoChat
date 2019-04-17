@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "510942632483",
+    "firebase_url": "https://emochat-6d3fd.firebaseio.com",
+    "project_id": "emochat-6d3fd",
+    "storage_bucket": "emochat-6d3fd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:510942632483:android:ea3f46cd286210ef",
+        "android_client_info": {
+          "package_name": "com.zhouqing.EmoChat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "510942632483-5grqv5auj3b9sapkvsmv21baq90ful11.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCy4vD7uuH1Gz86Z11aSSIA4Xj-c1RRrTg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "510942632483-5grqv5auj3b9sapkvsmv21baq90ful11.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

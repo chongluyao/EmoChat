@@ -5,19 +5,37 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.zhouqing.EmoChat.common.ui.view.AutoFitTextureView
-        android:id="@+id/texture"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="1"
-        android:visibility="visible"/>
+    <!--<com.zhouqing.EmoChat.common.ui.view.AutoFitTextureView-->
+        <!--android:id="@+id/texture"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:alpha="1"-->
+        <!--android:visibility="visible"/>-->
 
-    <com.zhouqing.EmoChat.common.ui.view.AutoFitTextureView
-        android:id="@+id/faces"
-        android:alpha="1"
+    <!--<com.zhouqing.EmoChat.common.ui.view.AutoFitTextureView-->
+        <!--android:id="@+id/faces"-->
+        <!--android:alpha="1"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:visibility="visible"/>-->
+
+    <com.zhouqing.EmoChat.face_detection.CameraSourcePreview
+        android:visibility="gone"
+        android:id="@+id/firePreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible"/>
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
+
+        <com.zhouqing.EmoChat.face_detection.GraphicOverlay
+            android:id="@+id/fireFaceOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentBottom="true"/>
+
+    </com.zhouqing.EmoChat.face_detection.CameraSourcePreview>
 
     <com.zhouqing.EmoChat.common.ui.view.KeyboardLinearLayout
         android:id="@+id/ll_keyboard"

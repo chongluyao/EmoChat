@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    buildToolsVersion "28.0.3"
     defaultConfig {
         applicationId 'com.zhouqing.EmoChat'
         minSdkVersion 21
@@ -32,4 +32,11 @@ dependencies {
     compile 'de.hdodenhof:circleimageview:2.1.0'
     testCompile 'junit:junit:4.12'
     compile project(':Library_zxing')
+
+    implementation 'com.google.firebase:firebase-core:16.0.0'
+
+    //ML Kit
+    implementation 'com.google.firebase:firebase-ml-vision:16.0.0'
+    implementation 'org.jetbrains:annotations-java5:15.0'
 }
+apply plugin: 'com.google.gms.google-services'
