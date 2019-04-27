@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -48,6 +49,10 @@ import com.zhouqing.EmoChat.face_detection.GraphicOverlay;
 import com.zhouqing.EmoChat.provider.SmsProvider;
 import com.zhouqing.EmoChat.service.IMService;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -55,9 +60,23 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class ChatActivity extends AppCompatActivity implements ChatContract.View, View.OnClickListener {
+
+
+    List<String> resultList = new ArrayList<>();
+    public static class TestEvent{
+        private String mMsg;
+        public TestEvent(String msg) {
+            mMsg = msg;
+        }
+        public String getMsg(){
+            return mMsg;
+        }
+    }
 
     private ListView mListView;
     private EditText etChatMessage;
@@ -82,6 +101,13 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
 
     int currentUserAvatarId;
     String otherUserAvatarId;
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(TestEvent event){
+        System.out.println("received:"+event.getMsg());
+        resultList.add(event.getMsg());
+    }
+
 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,6 +140,8 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
         }
         createCameraSource(FACE_DETECTION);
 
+        EventBus.getDefault().register(this);
+
     }
 
     @Override
@@ -123,6 +151,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
         getContentResolver().unregisterContentObserver(mContentObserver);
         //解除绑定
         mPresenter.unbindIMService();
+        EventBus.getDefault().unregister(this);
     }
 
     protected void initUi() {

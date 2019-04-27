@@ -79,7 +79,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
         detectInVisionImage(fbVisionImage, frameMetadata, graphicOverlay);
     }
 
-    private void detectInVisionImage(FirebaseVisionImage image, final FrameMetadata metadata, final GraphicOverlay graphicOverlay)
+    private void detectInVisionImage(final FirebaseVisionImage image, final FrameMetadata metadata, final GraphicOverlay graphicOverlay)
     {
         detectInImage(image)
                 .addOnSuccessListener(
@@ -88,7 +88,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                             public void onSuccess(T results) {
                                 shouldThrottle.set(false);
                                 VisionProcessorBase.this.onSuccess(results, metadata,
-                                        graphicOverlay);
+                                        graphicOverlay,image);
                             }
                         })
                 .addOnFailureListener(
@@ -113,7 +113,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     protected abstract void onSuccess(
             @NonNull T results,
             @NonNull FrameMetadata frameMetadata,
-            @NonNull GraphicOverlay graphicOverlay);
+            @NonNull GraphicOverlay graphicOverlay,@NonNull FirebaseVisionImage image);
 
     protected abstract void onFailure(@NonNull Exception e);
 }

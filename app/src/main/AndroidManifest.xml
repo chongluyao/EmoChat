@@ -11,14 +11,14 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
-        android:name="com.zhouqing.EmoChat.common.AppApplication"
+        android:name=".common.AppApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.zhouqing.EmoChat.splash.SplashActivity"
+            android:name=".splash.SplashActivity"
             android:theme="@style/AppTheme.FullScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,40 +26,40 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.zhouqing.EmoChat.login.LoginActivity" />
-        <activity android:name="com.zhouqing.EmoChat.register.RegisterActivity" />
-        <activity android:name="com.zhouqing.EmoChat.main.MainActivity" />
+        <activity android:name=".login.LoginActivity" />
+        <activity android:name=".register.RegisterActivity" />
+        <activity android:name=".main.MainActivity" />
         <activity
-            android:name="com.zhouqing.EmoChat.chat.ChatActivity"
+            android:name=".chat.ChatActivity"
             android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
-        <activity android:name="com.zhouqing.EmoChat.chat.DetailActivity" />
-        <activity android:name="com.zhouqing.EmoChat.setting.SettingActivity" />
-        <activity android:name="com.zhouqing.EmoChat.addFriend.AddFriendActivity" />
+        <activity android:name=".chat.DetailActivity" />
+        <activity android:name=".setting.SettingActivity" />
+        <activity android:name=".addFriend.AddFriendActivity" />
 
         <service
-            android:name="com.zhouqing.EmoChat.service.IMService"
+            android:name=".service.IMService"
             android:enabled="true"
             android:exported="true" />
 
         <provider
-            android:name="com.zhouqing.EmoChat.provider.ContactProvider"
+            android:name=".provider.ContactProvider"
             android:authorities="com.zhouqing.EmoChat.provider.ContactProvider"
             android:enabled="true"
             android:exported="true" />
         <provider
-            android:name="com.zhouqing.EmoChat.provider.SmsProvider"
+            android:name=".provider.SmsProvider"
             android:authorities="com.zhouqing.EmoChat.provider.SmsProvider"
             android:enabled="true"
             android:exported="true" />
         <provider
-            android:name="com.zhouqing.EmoChat.provider.AccountProvider"
+            android:name=".provider.AccountProvider"
             android:authorities="com.zhouqing.EmoChat.provider.AccountProvider"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name="com.zhouqing.EmoChat.avatar.AvatarActivity" />
-        <activity android:name="com.zhouqing.EmoChat.manage.ManageActivity" />
-        <activity android:name="com.zhouqing.EmoChat.manage.InputEmotionActivity"></activity>
+        <activity android:name=".avatar.AvatarActivity" />
+        <activity android:name=".manage.ManageActivity" />
+        <activity android:name=".manage.InputEmotionActivity" />
     </application>
 
 </manifest>
