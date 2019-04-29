@@ -5,6 +5,7 @@ package com.zhouqing.EmoChat.face_detection;
  */
 
 import android.graphics.Bitmap;
+import android.media.FaceDetector;
 import android.media.Image;
 import android.support.annotation.NonNull;
 
@@ -35,7 +36,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
 
     @Override
     public void process(
-            ByteBuffer data, final FrameMetadata frameMetadata, final GraphicOverlay
+            byte[] byteData, ByteBuffer data, final FrameMetadata frameMetadata, final GraphicOverlay
             graphicOverlay) {
         if (shouldThrottle.get()) {
             return;
@@ -48,8 +49,8 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                         .setRotation(frameMetadata.getRotation())
                         .build();
 
-        detectInVisionImage(
-                FirebaseVisionImage.fromByteBuffer(data, metadata), frameMetadata, graphicOverlay);
+        detectInVisionImage_v2(
+                byteData, FirebaseVisionImage.fromByteBuffer(data, metadata), frameMetadata, graphicOverlay);
     }
 
     // Bitmap version
@@ -79,7 +80,32 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
         detectInVisionImage(fbVisionImage, frameMetadata, graphicOverlay);
     }
 
-    private void detectInVisionImage(FirebaseVisionImage image, final FrameMetadata metadata, final GraphicOverlay graphicOverlay)
+    private void detectInVisionImage_v2(final byte[] byteData, final FirebaseVisionImage image, final FrameMetadata metadata, final GraphicOverlay graphicOverlay)
+    {
+        detectInImage(image)
+                .addOnSuccessListener(
+                        new OnSuccessListener<T>() {
+                            @Override
+                            public void onSuccess(T results) {
+                                shouldThrottle.set(false);
+                                VisionProcessorBase.this.onSuccess_v2(byteData, image, results, metadata,
+                                        graphicOverlay);
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                shouldThrottle.set(false);
+                                VisionProcessorBase.this.onFailure(e);
+                            }
+                        });
+        // Begin throttling until this frame of input has been processed, either in onSuccess or
+        // onFailure.
+        shouldThrottle.set(true);
+    }
+
+    private void detectInVisionImage(final FirebaseVisionImage image, final FrameMetadata metadata, final GraphicOverlay graphicOverlay)
     {
         detectInImage(image)
                 .addOnSuccessListener(
@@ -109,6 +135,13 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     }
 
     protected abstract Task<T> detectInImage(FirebaseVisionImage image);
+
+    protected abstract void onSuccess_v2(
+            byte[] byteData,
+            FirebaseVisionImage image,
+            @NonNull T results,
+            @NonNull FrameMetadata frameMetadata,
+            @NonNull GraphicOverlay graphicOverlay);
 
     protected abstract void onSuccess(
             @NonNull T results,

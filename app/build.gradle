@@ -19,6 +19,9 @@ android {
     }
     productFlavors {
     }
+    aaptOptions {
+        noCompress "tflite"  // Your model's file extension: "tflite", "lite", etc.
+    }
 }
 
 dependencies {
@@ -33,10 +36,11 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile project(':Library_zxing')
 
-    implementation 'com.google.firebase:firebase-core:16.0.0'
+    implementation 'com.google.firebase:firebase-core:16.0.8'
 
     //ML Kit
-    implementation 'com.google.firebase:firebase-ml-vision:16.0.0'
+    implementation 'com.google.firebase:firebase-ml-vision:19.0.3'
     implementation 'org.jetbrains:annotations-java5:15.0'
+    implementation 'com.google.firebase:firebase-ml-model-interpreter:18.0.0'
 }
-apply plugin: 'com.google.gms.google-services'
+// apply plugin: 'com.google.gms.google-services'

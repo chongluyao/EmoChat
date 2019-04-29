@@ -7,7 +7,9 @@ package com.zhouqing.EmoChat.face_detection;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.common.FirebaseVisionPoint;
 import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceLandmark;
@@ -133,6 +135,25 @@ public class FaceGraphic extends GraphicOverlay.Graphic
 //        drawLandmarkPosition(canvas, face, FirebaseVisionFaceLandmark.RIGHT_EAR);
 //        drawLandmarkPosition(canvas, face, FirebaseVisionFaceLandmark.RIGHT_EYE);
 //        drawLandmarkPosition(canvas, face, FirebaseVisionFaceLandmark.RIGHT_MOUTH);
+    }
+
+    public Rect getBound(FirebaseVisionFace face) {
+
+        float x = translateX(face.getBoundingBox().centerX());
+        float y = translateY(face.getBoundingBox().centerY());
+
+        float xOffset = scaleX(face.getBoundingBox().width() / 2.0f);
+        float yOffset = scaleY(face.getBoundingBox().height() / 2.0f);
+
+        float left = x - xOffset;
+        float top = y - yOffset;
+        float right = x + xOffset;
+        float bottom = y + yOffset;
+
+        Rect rect = new Rect(((int) left), ((int) top), ((int) right), ((int) bottom));
+
+        return rect;
+
     }
 
     private void drawLandmarkPosition(Canvas canvas, FirebaseVisionFace face, int landmarkID)

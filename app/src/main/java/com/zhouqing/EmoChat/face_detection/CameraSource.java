@@ -595,6 +595,7 @@ public class CameraSource {
 
         // These pending variables hold the state associated with the new frame awaiting processing.
         private ByteBuffer pendingFrameData;
+        private byte[] byteData;
 
         FrameProcessingRunnable() {}
 
@@ -634,6 +635,7 @@ public class CameraSource {
                     return;
                 }
 
+                byteData = data;
                 pendingFrameData = bytesToByteBuffer.get(data);
 
                 // Notify the processor thread if it is waiting on the next frame (see below).
@@ -696,7 +698,7 @@ public class CameraSource {
                     synchronized (processorLock) {
                         Log.d(TAG, "Process an image");
                         frameProcessor.process(
-                                data,
+                                byteData, data,
                                 new FrameMetadata.Builder()
                                         .setWidth(previewSize.getWidth())
                                         .setHeight(previewSize.getHeight())
