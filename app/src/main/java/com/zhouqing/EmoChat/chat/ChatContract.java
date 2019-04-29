@@ -10,7 +10,7 @@ public class ChatContract {
     public interface Presenter extends BasePresenter {
         void getDialogueMessage(String clickAccout);
 
-        void sendMessage(String clickAccout,String facePic,String type);
+        void sendMessage(String clickAccout,String facePic,String type,String emotionShow);
 
         void bindIMService();
 

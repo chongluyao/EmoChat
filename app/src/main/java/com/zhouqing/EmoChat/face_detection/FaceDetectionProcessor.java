@@ -90,9 +90,14 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
 
             //saveBitmap(newBitmap,"new"+id+".jpg");
 
-            EventBus.getDefault().post(new ChatActivity.TestEvent(left+","+right+","+top+","+bottom));
+            //EventBus.getDefault().post(new ChatActivity.TestEvent(left+","+right+","+top+","+bottom));
 
-
+            //此处对截取的newBitmap进行表情识别，并在识别成功的回调函数中使用EventBus发送结果到主线程
+            //以下代码为随机发送的结果
+            float[] probabilities = new float[2];
+            probabilities[0] = random.nextFloat();
+            probabilities[1] = 1 - probabilities[0];
+            EventBus.getDefault().post(new ChatActivity.EmotionEvent(0,probabilities));
         }
     }
 

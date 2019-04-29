@@ -34,6 +34,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.vision.face.FaceDetector;
+import com.google.zxing.common.StringUtils;
 import com.zhouqing.EmoChat.R;
 import com.zhouqing.EmoChat.common.AppApplication;
 import com.zhouqing.EmoChat.common.constant.Global;
@@ -59,22 +60,41 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 public class ChatActivity extends AppCompatActivity implements ChatContract.View, View.OnClickListener {
 
 
-    List<String> resultList = new ArrayList<>();
-    public static class TestEvent{
-        private String mMsg;
-        public TestEvent(String msg) {
-            mMsg = msg;
+    List<float[]> imageEmotionList = new ArrayList<>();//一条句子期间的表情集合
+    public static class EmotionEvent{
+        private int type;//0 表示图像 1表示文本
+        private float[] probabilities;//概率数组，前者为正面情绪的概率，后者为负面情绪的概率
+
+        public int getType() {
+            return type;
         }
-        public String getMsg(){
-            return mMsg;
+
+        public void setType(int type) {
+            this.type = type;
+        }
+
+        public float[] getProbabilities() {
+            return probabilities;
+        }
+
+        public void setProbabilities(float[] probabilities) {
+            this.probabilities = probabilities;
+        }
+
+        public EmotionEvent(int type, float[] probabilities) {
+            this.type = type;
+            this.probabilities = probabilities;
         }
     }
 
@@ -103,11 +123,58 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
     String otherUserAvatarId;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventMainThread(TestEvent event){
-        System.out.println("received:"+event.getMsg());
-        resultList.add(event.getMsg());
+    public void onEventMainThread(EmotionEvent event){
+        String typeName = "";
+        //接收类型为图像
+        if(event.getType() == 0){
+            typeName = "image";
+            imageEmotionList.add(event.getProbabilities());
+        }
+        //接收类型为文本
+        else{
+            typeName = "text";
+            //对这条文本发送期间的人脸表情列表与文本表情结合 得到表情概率
+            float[] unionProbabilities = getUnionEmotion(imageEmotionList,event.getProbabilities());
+            String emotionShow = getEmotionContent(unionProbabilities);
+            mPresenter.sendMessage(mClickAccount,"",emotion,emotionShow);
+            startEntering = false;
+            closeCameraPreview();
+        }
+        System.out.println("received:("+ typeName+ ")"+ Arrays.toString(event.getProbabilities()));
     }
 
+    /**
+     * 根据文本和表情的情绪识别结果获得最终的识别结果
+     * @param imageEmotionList
+     * @param textProbabilities
+     * @return
+     */
+    public float[] getUnionEmotion(List<float[]> imageEmotionList, float[] textProbabilities){
+        float[] answer = new float[2];
+        Random random = new Random();
+        answer[0] = random.nextFloat();
+        answer[1] = 1 - answer[0];
+        return answer;
+    }
+
+    /**
+     * 通过最终的情绪识别结果构建表情内容，用于显示在聊天内容下方
+     * @param unionProbabilities
+     * @return
+     */
+    public String getEmotionContent(float[] unionProbabilities){
+        float posPro = unionProbabilities[0] * 100f;
+        float negPro = unionProbabilities[1] * 100f;
+
+        DecimalFormat df = new DecimalFormat("#.00");
+        System.out.println();
+        if(posPro > negPro){
+            return "positive:"+df.format(posPro)+"%";
+        }
+        else{
+            return "negative:"+df.format(negPro)+"%";
+        }
+    }
 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -400,22 +467,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_send:
-                //etChatMessage.clearFocus();
-                String prefix = "" + System.currentTimeMillis();
-                //存储照片与文字
-                String path = Global.PROJECT_FILE_PATH +Global.accountToNickName(IMService.ACCOUNT) +"/"+mClickNickname+"/";
-                if (!new File(path).exists()) {
-                    new File(path).mkdirs();
-                }
-//                mFilePic = new File(path,  prefix + ".png");
-                  mFileText = new File(path, prefix + ".txt");
-//                // save picture
-//                takePicture();
-                // save text
-                saveText(getMessage());
-                mPresenter.sendMessage(mClickAccount,prefix + ".png",emotion);
-                startEntering = false;
-                closeCameraPreview();
+                detectTextEmotionAndSend();
                 break;
             case R.id.iv_emotion:
                 changeEmotionStatus();
@@ -434,22 +486,50 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
         }
     }
 
-    public void saveText(String message) {
-        try {
-            FileOutputStream fos = new FileOutputStream(mFileText);
-            OutputStreamWriter writer=new OutputStreamWriter(fos,"utf-8");
-            writer.write(message);
-            writer.close();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    /**
+     * 发送按钮对应的点击事件
+     * 首先对文本进行情感检测 然后将识别结果与文字内容一同发送给主线程
+     */
+    public void detectTextEmotionAndSend(){
+        //etChatMessage.clearFocus();
+//        String prefix = "" + System.currentTimeMillis();
+        //存储照片与文字
+//        String path = Global.PROJECT_FILE_PATH +Global.accountToNickName(IMService.ACCOUNT) +"/"+mClickNickname+"/";
+//        if (!new File(path).exists()) {
+//            new File(path).mkdirs();
+//        }
+////                mFilePic = new File(path,  prefix + ".png");
+//        mFileText = new File(path, prefix + ".txt");
+////                // save picture
+////                takePicture();
+//        // save text
+//        saveText(getMessage());
 
+        String content = getMessage();//获取发送文本内容
+        //此处将content作为输入，得到文本对应的情绪
+        Random random = new Random();
+        float[] probabilities = new float[2];
+        probabilities[0] = random.nextFloat();
+        probabilities[1] = 1 - probabilities[0];
+        EventBus.getDefault().post(new ChatActivity.EmotionEvent(1,probabilities));
     }
+
+//    public void saveText(String message) {
+//        try {
+//            FileOutputStream fos = new FileOutputStream(mFileText);
+//            OutputStreamWriter writer=new OutputStreamWriter(fos,"utf-8");
+//            writer.write(message);
+//            writer.close();
+//            fos.close();
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
 
 
     /**
@@ -509,6 +589,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
                     holder.time = (TextView) convertView.findViewById(R.id.time);
                     holder.body = (TextView) convertView.findViewById(R.id.content);
                     holder.head = (ImageView) convertView.findViewById(R.id.head);
+                    holder.emotion = (TextView) convertView.findViewById(R.id.emotion);
                 } else {
                     holder = (ViewHolder) convertView.getTag();
                 }
@@ -527,6 +608,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
                     holder.time = (TextView) convertView.findViewById(R.id.time);
                     holder.body = (TextView) convertView.findViewById(R.id.content);
                     holder.head = (ImageView) convertView.findViewById(R.id.head);
+                    holder.emotion = (TextView) convertView.findViewById(R.id.emotion);
                 } else {
                     holder = (ViewHolder) convertView.getTag();
                 }
@@ -540,6 +622,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
 
             String time = cursor.getString(cursor.getColumnIndex(SmsOpenHelper.SmsTable.TIME));
             String body = cursor.getString(cursor.getColumnIndex(SmsOpenHelper.SmsTable.BODY));
+            String emotion = cursor.getString(cursor.getColumnIndex(SmsOpenHelper.SmsTable.EMOTION_SHOW));
 
             String formatTime = new SimpleDateFormat("HH:mm").format(new Date(Long
                     .parseLong(time)));
@@ -551,6 +634,10 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
             SpannableString emotionContent = SpanStringUtil.getEmotionContent(EmotionUtil.EMOTION_CLASSIC_TYPE,
                     ChatActivity.this, holder.body, body);
             holder.body.setText(emotionContent);
+            if(!TextUtils.isEmpty(emotion)){
+                holder.emotion.setVisibility(View.VISIBLE);
+                holder.emotion.setText(emotion);
+            }
 
 
             return convertView;
@@ -560,6 +647,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
             TextView body;
             TextView time;
             ImageView head;
+            TextView emotion;
 
         }
     }
