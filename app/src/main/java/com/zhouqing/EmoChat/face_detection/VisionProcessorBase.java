@@ -19,8 +19,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Abstract base class for ML Kit frame processors. Subclasses need to implement {@link
- * #onSuccess(T, FrameMetadata, GraphicOverlay)} to define what they want to with the detection
+ * Abstract base class for ML Kit frame processors. Subclasses need to implement to define what they want to with the detection
  * results and {@link #detectInImage(FirebaseVisionImage)} to specify the detector object.
  *
  * @param <T> The type of the detected feature.
@@ -114,7 +113,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
                             public void onSuccess(T results) {
                                 shouldThrottle.set(false);
                                 VisionProcessorBase.this.onSuccess(results, metadata,
-                                        graphicOverlay);
+                                        graphicOverlay,image);
                             }
                         })
                 .addOnFailureListener(
@@ -146,7 +145,7 @@ public abstract class VisionProcessorBase<T> implements VisionImageProcessor {
     protected abstract void onSuccess(
             @NonNull T results,
             @NonNull FrameMetadata frameMetadata,
-            @NonNull GraphicOverlay graphicOverlay);
+            @NonNull GraphicOverlay graphicOverlay,@NonNull FirebaseVisionImage image);
 
     protected abstract void onFailure(@NonNull Exception e);
 }

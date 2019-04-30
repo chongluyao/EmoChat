@@ -6,7 +6,6 @@ package com.zhouqing.EmoChat.face_detection;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -23,7 +22,10 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions;
+import com.zhouqing.EmoChat.chat.ChatActivity;
+import com.zhouqing.EmoChat.common.constant.Global;
 
+import org.greenrobot.eventbus.EventBus;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 /** Face Detector Demo. */
 public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVisionFace>> {
@@ -67,19 +70,6 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
     }
 
     @Override
-    protected void onSuccess(@NonNull List<FirebaseVisionFace> faces, @NonNull FrameMetadata frameMetadata, @NonNull GraphicOverlay graphicOverlay) {
-        // update face
-        graphicOverlay.clear();
-        for (int i = 0; i < faces.size(); ++i)
-        {
-            FirebaseVisionFace face = faces.get(i);
-            FaceGraphic faceGraphic = new FaceGraphic(graphicOverlay);
-            graphicOverlay.add(faceGraphic);
-            faceGraphic.updateFace(face, frameMetadata.getCameraFacing());
-        }
-    }
-
-    @Override
     protected void onSuccess_v2(byte[] byteData, FirebaseVisionImage image, @NonNull List<FirebaseVisionFace> faces, @NonNull FrameMetadata frameMetadata, @NonNull GraphicOverlay graphicOverlay) {
         // save image
         graphicOverlay.clear();
@@ -92,10 +82,10 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
             // get face1
             Rect rect1 = face.getBoundingBox();
             Log.d(TAG, "onSuccess_v2: " + rect1.flattenToString());
-            int left1 = rect1.left >= 1 ? rect1.left:1;
-            int top1 = rect1.top >= 1 ? rect1.top:1;
-            int right1 = rect1.right <= bitmap.getWidth() ? rect1.right:bitmap.getWidth();
-            int bottom1 = rect1.bottom <= bitmap.getHeight() ? rect1.bottom:bitmap.getHeight();
+            int left1 = rect1.left >= 1 ? rect1.left : 1;
+            int top1 = rect1.top >= 1 ? rect1.top : 1;
+            int right1 = rect1.right <= bitmap.getWidth() ? rect1.right : bitmap.getWidth();
+            int bottom1 = rect1.bottom <= bitmap.getHeight() ? rect1.bottom : bitmap.getHeight();
             int width1 = right1 - left1;
             int height1 = bottom1 - top1;
             Bitmap bitmap_face1 = Bitmap.createBitmap(bitmap, left1, top1, width1, height1);
@@ -123,12 +113,19 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
             } catch (FirebaseMLException e) {
                 e.printStackTrace();
             }
-
-
         }
+    }
 
+    // update face
+    @Override
+    protected void onSuccess(@NonNull List<FirebaseVisionFace> faces, @NonNull FrameMetadata frameMetadata, @NonNull GraphicOverlay graphicOverlay,@NonNull FirebaseVisionImage image) {
+        Bitmap bitmap = image.getBitmapForDebugging();
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        Random random = new Random();
+        String id = random.nextInt()+"";
+        //saveBitmap(bitmap,"original"+id+".jpg");
 
-        // update face
         graphicOverlay.clear();
         for (int i = 0; i < faces.size(); ++i)
         {
@@ -136,6 +133,31 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
             FaceGraphic faceGraphic = new FaceGraphic(graphicOverlay);
             graphicOverlay.add(faceGraphic);
             faceGraphic.updateFace(face, frameMetadata.getCameraFacing());
+
+            int left = face.getBoundingBox().left;
+            if(left<0)left = 0;
+            int top = face.getBoundingBox().top;
+            if(top<0)top = 0;
+            int right = face.getBoundingBox().right;
+            if(right>width)right = width;
+            int bottom = face.getBoundingBox().bottom;
+            if(bottom>height)bottom = height;
+            int w = right - left ;
+            int h = bottom - top ;
+
+            //System.out.println("top:"+top+",left:"+left+",right:"+right+",bottom:"+bottom+",width:"+width+",height:"+height);
+            Bitmap newBitmap = Bitmap.createBitmap(bitmap,left,top,w,h);
+
+            //saveBitmap(newBitmap,"new"+id+".jpg");
+
+            //EventBus.getDefault().post(new ChatActivity.TestEvent(left+","+right+","+top+","+bottom));
+
+            //此处对截取的newBitmap进行表情识别，并在识别成功的回调函数中使用EventBus发送结果到主线程
+            //以下代码为随机发送的结果
+            float[] probabilities = new float[2];
+            probabilities[0] = random.nextFloat();
+            probabilities[1] = 1 - probabilities[0];
+            EventBus.getDefault().post(new ChatActivity.EmotionEvent(0,probabilities));
         }
     }
 
@@ -144,20 +166,29 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
         Log.e(TAG, "Face detection failed " + e);
     }
 
-    private void saveBitmap(Bitmap bitmap, String filename) {
 
-        String dir = Environment.getExternalStorageDirectory() + "/EmoChat/";
-        long millis = System.currentTimeMillis();
-        String timename = "" + millis;
+    /**
+     * 保存bitmap
+     * @param mBitmap
+     */
+    public static void saveBitmap(Bitmap mBitmap,String fileName) {
+        String savePath = Global.PROJECT_FILE_PATH;
+        File filePic;
         try {
-            File file = new File(dir + timename + filename + ".jpg");
-            FileOutputStream out = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-            out.flush();
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            filePic = new File(savePath  + fileName);//保存的格式为jpg
+            if (!filePic.exists()) {
+                filePic.getParentFile().mkdirs();
+                filePic.createNewFile();
+            }
+            FileOutputStream fos = new FileOutputStream(filePic);
+            mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
 
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+
+        }
     }
+
 }

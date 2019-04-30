@@ -34,6 +34,7 @@ public class SmsOpenHelper extends SQLiteOpenHelper {
         public static final String MY_ACCOUNT = "my_account";//本地登录的用户
         public static final String FACE_PIC = "face_pic";
         public static final String EMOTION = "emotion";
+        public static final String EMOTION_SHOW = "emotion_show";//聊天内容下方显示的表情内容
 
     }
 
@@ -53,6 +54,7 @@ public class SmsOpenHelper extends SQLiteOpenHelper {
                 "session_account TEXT," +
                 "my_account TEXT,"+
                 "face_pic TEXT," +
+                "emotion_show TEXT," +
                 "emotion TEXT);";
 
         db.execSQL(sql);

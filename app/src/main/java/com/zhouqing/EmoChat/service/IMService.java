@@ -75,8 +75,8 @@ public class IMService extends Service {
     }
 
     public class MyBinder extends Binder {
-        public void sendMessage(Message message,String facePic,String type) {
-            IMService.this.sendMessage(message,facePic,type);
+        public void sendMessage(Message message,String facePic,String type,String emotionShow) {
+            IMService.this.sendMessage(message,facePic,type,emotionShow);
         }
     }
 
@@ -208,7 +208,7 @@ public class IMService extends Service {
     /**
      * 发送消息
      */
-    public void sendMessage(Message message,String facePic,String type) {
+    public void sendMessage(Message message,String facePic,String type,String emotionShow) {
         //2.创建聊天对象 Chat
         String accountTo = message.getTo();
         if (mChatMap.get(accountTo) == null) {
@@ -220,7 +220,7 @@ public class IMService extends Service {
 
         try {
             mChat.sendMessage(message);
-            saveMessage(getApplicationContext(), message, message.getTo(), message.getFrom(), facePic,type);
+            saveMessage(getApplicationContext(), message, message.getTo(), message.getFrom(), facePic,type,emotionShow);
         } catch (XMPPException e) {
             e.printStackTrace();
             ToastUtil.showToastSafe(getApplicationContext(), getString(R.string.server_send_message_error));
@@ -230,7 +230,7 @@ public class IMService extends Service {
     /**
      * 缓存消息到本地数据库中
      */
-    private void saveMessage(Context context, Message msg, String sessionAccount, String myAccount, String facePic, String type) {
+    private void saveMessage(Context context, Message msg, String sessionAccount, String myAccount, String facePic, String type,String emotionShow) {
         ContentValues values = new ContentValues();
 
         //对账号进行处理
@@ -248,6 +248,7 @@ public class IMService extends Service {
         values.put(SmsOpenHelper.SmsTable.SESSION_ACCOUNT, sessionAccount);
         values.put(SmsOpenHelper.SmsTable.MY_ACCOUNT, myAccount);
         values.put(SmsOpenHelper.SmsTable.FACE_PIC,facePic);
+        values.put(SmsOpenHelper.SmsTable.EMOTION_SHOW,emotionShow);
         //values.put(SmsOpenHelper.SmsTable.EMOTION,"");
         context.getContentResolver().insert(SmsProvider.URI_SMS, values);
     }
@@ -359,7 +360,7 @@ public class IMService extends Service {
                 @Override
                 public void run() {
                     //缓存消息
-                    saveMessage(getApplicationContext(), message, message.getFrom(), message.getTo(),"","");
+                    saveMessage(getApplicationContext(), message, message.getFrom(), message.getTo(),"","","");
                     ThreadUtil.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
