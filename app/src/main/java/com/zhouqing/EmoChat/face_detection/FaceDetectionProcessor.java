@@ -5,18 +5,24 @@ package com.zhouqing.EmoChat.face_detection;
  */
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.ml.common.FirebaseMLException;
 import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel;
 import com.google.firebase.ml.common.modeldownload.FirebaseModelManager;
 import com.google.firebase.ml.custom.FirebaseModelDataType;
 import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions;
+import com.google.firebase.ml.custom.FirebaseModelInputs;
 import com.google.firebase.ml.custom.FirebaseModelInterpreter;
 import com.google.firebase.ml.custom.FirebaseModelOptions;
+import com.google.firebase.ml.custom.FirebaseModelOutputs;
 import com.google.firebase.ml.vision.FirebaseVision;
 import com.google.firebase.ml.vision.common.FirebaseVisionImage;
 import com.google.firebase.ml.vision.face.FirebaseVisionFace;
@@ -119,7 +125,7 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
     // update face
     @Override
     protected void onSuccess(@NonNull List<FirebaseVisionFace> faces, @NonNull FrameMetadata frameMetadata, @NonNull GraphicOverlay graphicOverlay,@NonNull FirebaseVisionImage image) {
-        Bitmap bitmap = image.getBitmapForDebugging();
+        final Bitmap bitmap = image.getBitmapForDebugging();
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
         Random random = new Random();
@@ -146,7 +152,78 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
             int h = bottom - top ;
 
             //System.out.println("top:"+top+",left:"+left+",right:"+right+",bottom:"+bottom+",width:"+width+",height:"+height);
-            Bitmap newBitmap = Bitmap.createBitmap(bitmap,left,top,w,h);
+            final Bitmap newBitmap = Bitmap.createBitmap(bitmap,left,top,w,h);
+            final Bitmap resized_newBitmap = Bitmap.createScaledBitmap(newBitmap, 64, 64, true);
+
+            Log.d(TAG, "onSuccess: " + System.currentTimeMillis());
+            // feed to model
+            FirebaseLocalModel localSource =
+                    new FirebaseLocalModel.Builder("face_local_model")  // Assign a name to this model
+                            .setAssetFilePath("face_analyze.tflite")
+                            .build();
+            FirebaseModelManager.getInstance().registerLocalModel(localSource);
+            FirebaseModelOptions options = new FirebaseModelOptions.Builder()
+                    .setLocalModelName("face_local_model")
+                    .build();
+            try {
+                FirebaseModelInterpreter firebaseInterpreter =
+                        FirebaseModelInterpreter.getInstance(options);
+                FirebaseModelInputOutputOptions inputOutputOptions =
+                        new FirebaseModelInputOutputOptions.Builder()
+                                .setInputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 64, 64, 1})
+                                .setOutputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 2})
+                                .build();
+                int batchNum = 0;
+                float[][][][] input = new float[1][64][64][1];
+                for (int x = 0; x < 64; x++) {
+                    for (int y = 0; y < 64; y++) {
+                        int pixel = resized_newBitmap.getPixel(x, y);
+                        // Normalize channel values to [-1.0, 1.0]. This requirement varies by
+                        // model. For example, some models might require values to be normalized
+                        // to the range [0.0, 1.0] instead.
+
+                        // input[batchNum][x][y][0] = (Color.red(pixel) / 255.0f - 0.5f) * 2;
+                        int r = Color.red(pixel);
+                        int g = Color.green(pixel);
+                        int b = Color.blue(pixel);
+                        input[batchNum][y][x][0] = ((r + g + b) / 3 / 255.0f - 0.5f) * 2;
+                    }
+                }
+                FirebaseModelInputs inputs = new FirebaseModelInputs.Builder()
+                        .add(input)  // add() as many input arrays as your model requires
+                        .build();
+                firebaseInterpreter.run(inputs, inputOutputOptions)
+                        .addOnSuccessListener(
+                                new OnSuccessListener<FirebaseModelOutputs>() {
+                                    @Override
+                                    public void onSuccess(FirebaseModelOutputs result) {
+                                        // ...
+                                        float[][] output = result.getOutput(0);
+                                        float[] probabilities = output[0];
+
+                                        // save
+                                        long prefix = System.currentTimeMillis();
+                                        saveBitmap(resized_newBitmap, prefix + "test.jpg");
+                                        saveText("" + probabilities[0] + " " + probabilities[1], prefix + "test.txt");
+                                        EventBus.getDefault().post(new ChatActivity.EmotionEvent(0,probabilities));
+
+                                        Log.d(TAG, "onSuccess: " + System.currentTimeMillis());
+                                        Log.d(TAG, "onSuccess: " + probabilities[0] + " " + probabilities[1]);
+                                    }
+                                })
+                        .addOnFailureListener(
+                                new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        // Task failed with an exception
+                                        // ...
+                                        Log.d(TAG, "onFailure: " + e);
+                                    }
+                                });
+            } catch (FirebaseMLException e) {
+                e.printStackTrace();
+            }
+
 
             //saveBitmap(newBitmap,"new"+id+".jpg");
 
@@ -154,10 +231,10 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
 
             //此处对截取的newBitmap进行表情识别，并在识别成功的回调函数中使用EventBus发送结果到主线程
             //以下代码为随机发送的结果
-            float[] probabilities = new float[2];
-            probabilities[0] = random.nextFloat();
-            probabilities[1] = 1 - probabilities[0];
-            EventBus.getDefault().post(new ChatActivity.EmotionEvent(0,probabilities));
+//            float[] probabilities = new float[2];
+//            probabilities[0] = random.nextFloat();
+//            probabilities[1] = 1 - probabilities[0];
+//            EventBus.getDefault().post(new ChatActivity.EmotionEvent(0,probabilities));
         }
     }
 
@@ -182,6 +259,30 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
             }
             FileOutputStream fos = new FileOutputStream(filePic);
             mBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+            fos.close();
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+
+        }
+    }
+
+    /**
+     * 保存预测结果
+     * @param mText
+     */
+    public static void saveText(String mText,String fileName) {
+        String savePath = Global.PROJECT_FILE_PATH;
+        File filePic;
+        try {
+            filePic = new File(savePath  + fileName);//保存的格式为jpg
+            if (!filePic.exists()) {
+                filePic.getParentFile().mkdirs();
+                filePic.createNewFile();
+            }
+            FileOutputStream fos = new FileOutputStream(filePic);
+            fos.write(mText.getBytes());
             fos.flush();
             fos.close();
 

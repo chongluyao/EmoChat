@@ -43,5 +43,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-ml-vision:19.0.3'
     implementation 'org.jetbrains:annotations-java5:15.0'
     implementation 'com.google.firebase:firebase-ml-model-interpreter:18.0.0'
+    implementation 'org.tensorflow:tensorflow-lite:2.1.100'
 }
-// apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.gms.google-services'

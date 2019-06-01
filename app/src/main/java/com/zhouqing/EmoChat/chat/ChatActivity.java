@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -33,7 +34,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.vision.face.FaceDetector;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.ml.common.FirebaseMLException;
+import com.google.firebase.ml.common.modeldownload.FirebaseLocalModel;
+import com.google.firebase.ml.common.modeldownload.FirebaseModelManager;
+import com.google.firebase.ml.custom.FirebaseModelDataType;
+import com.google.firebase.ml.custom.FirebaseModelInputOutputOptions;
+import com.google.firebase.ml.custom.FirebaseModelInputs;
+import com.google.firebase.ml.custom.FirebaseModelInterpreter;
+import com.google.firebase.ml.custom.FirebaseModelOptions;
+import com.google.firebase.ml.custom.FirebaseModelOutputs;
 import com.google.zxing.common.StringUtils;
 import com.zhouqing.EmoChat.R;
 import com.zhouqing.EmoChat.common.AppApplication;
@@ -118,6 +131,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
     private MyCursorAdapter mCursorAdapter;
     private ActionBar mActionBar;
     private ChatContract.Presenter mPresenter;
+    private AppApplication appApplication;
 
     int currentUserAvatarId;
     String otherUserAvatarId;
@@ -150,10 +164,17 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
      * @return
      */
     public float[] getUnionEmotion(List<float[]> imageEmotionList, float[] textProbabilities){
+        float[] answer_face = imageEmotionList.get(0);
+        float[] answer_text = textProbabilities;
+
+        Log.d(TAG, "getUnionEmotion: " + answer_face[0] + " " + answer_face[1]);
+        Log.d(TAG, "getUnionEmotion: " + answer_text[0] + " " + answer_text[1]);
+        // union
         float[] answer = new float[2];
-        Random random = new Random();
-        answer[0] = random.nextFloat();
-        answer[1] = 1 - answer[0];
+        answer[0] = (answer_face[0] + answer_text[0]) / 2;
+        answer[1] = (answer_face[1] + answer_text[1]) / 2;
+
+        Log.d(TAG, "getUnionEmotion: " + answer[0] + " " + answer[1]);
         return answer;
     }
 
@@ -205,10 +226,12 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
         {
             Log.d(TAG, "graphicOverlay is null");
         }
+
+        FirebaseApp.initializeApp(getBaseContext());
+        appApplication = (AppApplication) getApplication();
         createCameraSource(FACE_DETECTION);
 
         EventBus.getDefault().register(this);
-
     }
 
     @Override
@@ -505,8 +528,82 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
 //        // save text
 //        saveText(getMessage());
 
+        Log.d(TAG, "detectTextEmotionAndSend: " + System.currentTimeMillis());
         String content = getMessage();//获取发送文本内容
+        int seqLength = 60;
+
         //此处将content作为输入，得到文本对应的情绪
+        // init model
+        FirebaseLocalModel localSource =
+                new FirebaseLocalModel.Builder("text_model")  // Assign a name to this model
+                        .setAssetFilePath("text_analyze.tflite")
+                        .build();
+        FirebaseModelManager.getInstance().registerLocalModel(localSource);
+        Log.d(TAG, "onCreate: load option");
+        FirebaseModelOptions options = new FirebaseModelOptions.Builder()
+                .setLocalModelName("text_model")
+                .build();
+        try {
+            FirebaseModelInterpreter firebaseInterpreter =
+                    FirebaseModelInterpreter.getInstance(options);
+            FirebaseModelInputOutputOptions inputOutputOptions =
+                    new FirebaseModelInputOutputOptions.Builder()
+                            .setInputFormat(0, FirebaseModelDataType.INT32, new int[]{1, 60})
+                            .setInputFormat(1, FirebaseModelDataType.FLOAT32, new int[]{1})
+                            .setOutputFormat(0, FirebaseModelDataType.FLOAT32, new int[]{1, 2})
+                            .build();
+            // get text
+            char[] characters = content.toCharArray();
+            for (int i = 0;i < characters.length;i ++) {
+                Log.i(TAG, "onCreate: " + characters[i]);
+            }
+            // get vector
+            int[][] vector = new int[1][60];
+            for (int i = 0;i < 60;i ++) {
+                vector[0][i] = 0;
+            }
+            int point = seqLength - 1;
+            for (int i = characters.length - 1;i >= 0;i --) {
+                String s = String.valueOf(characters[i]);
+                vector[0][point] = appApplication.word2id.get(s);
+                point --;
+            }
+            // get keep_prob
+            float[] keep_prob = new float[1];
+            keep_prob[0] = 1.0f;
+            // get inputs
+            FirebaseModelInputs inputs = new FirebaseModelInputs.Builder()
+                    .add(vector)  // add() as many input arrays as your model requires
+                    .add(keep_prob)
+                    .build();
+            // run
+            firebaseInterpreter.run(inputs, inputOutputOptions)
+                    .addOnSuccessListener(
+                            new OnSuccessListener<FirebaseModelOutputs>() {
+                                @Override
+                                public void onSuccess(FirebaseModelOutputs result) {
+                                    // ...
+                                    float[][] output = result.getOutput(0);
+                                    float[] probabilities = output[0];
+
+                                    Log.d(TAG, "onSuccess: " + System.currentTimeMillis());
+                                    EventBus.getDefault().post(new EmotionEvent(1,probabilities));
+                                }
+                            })
+                    .addOnFailureListener(
+                            new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    // Task failed with an exception
+                                    // ...
+                                    Log.d(TAG, "onFailure: " + e.toString());
+                                }
+                            });
+        } catch (FirebaseMLException e) {
+            e.printStackTrace();
+        }
+
+
         Random random = new Random();
         float[] probabilities = new float[2];
         probabilities[0] = random.nextFloat();
