@@ -4,20 +4,60 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 
 import com.zhouqing.EmoChat.R;
+import com.zhouqing.EmoChat.common.constant.Global;
 import com.zhouqing.EmoChat.common.ui.BaseActivity;
 import com.zhouqing.EmoChat.common.util.SPUtil;
+import com.zhouqing.EmoChat.common.util.ToastUtil;
 import com.zhouqing.EmoChat.main.util.FragmentFactory;
 import com.zhouqing.EmoChat.service.IMService;
 
 
+
 public class SettingActivity extends BaseActivity {
+
+
+    private Switch swCamera;
+    private Switch swEmotion;
+
 
     @Override
     protected void initUi() {
         setContentView(R.layout.activity_setting);
         addActionBar(getString(R.string.setting_title),true);
+        swCamera = findViewById(R.id.sw_camera);
+        boolean cameraOpen = Global.getSPBoolean(SettingActivity.this,"cameraOpen");
+        swCamera.setChecked(cameraOpen);
+        swCamera.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(compoundButton.isChecked()) {
+                    //ToastUtil.showToast(SettingActivity.this,"on!");
+                    Global.saveSpBoolean(SettingActivity.this,"cameraOpen",true);
+                }
+                else{
+                    //ToastUtil.showToast(SettingActivity.this,"off!");
+                    Global.saveSpBoolean(SettingActivity.this,"cameraOpen",false);
+                }
+            }
+        });
+        swEmotion = findViewById(R.id.sw_emotion);
+        boolean emotionOpen = Global.getSPBoolean(SettingActivity.this,"emotionOpen");
+        swEmotion.setChecked(emotionOpen);
+        swEmotion.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(compoundButton.isChecked()){
+                    Global.saveSpBoolean(SettingActivity.this,"emotionOpen",true);
+                }
+                else{
+                    Global.saveSpBoolean(SettingActivity.this,"emotionOpen",false);
+                }
+            }
+        });
 
     }
 

@@ -82,6 +82,7 @@
             android:layout_marginTop="15dp"
             app:drawableLeft="@drawable/manage"
             app:padding="10dp"
+            android:visibility="gone"
             app:text="标注"/>
 
         <com.zhouqing.EmoChat.common.ui.view.SettingView
@@ -91,6 +92,7 @@
             android:layout_marginTop="15dp"
             app:drawableLeft="@drawable/export"
             app:padding="10dp"
+            android:visibility="gone"
             app:text="导出"/>
     </LinearLayout>
 </ScrollView>

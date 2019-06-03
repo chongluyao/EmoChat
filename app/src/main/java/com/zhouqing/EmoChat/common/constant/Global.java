@@ -1,6 +1,8 @@
 package com.zhouqing.EmoChat.common.constant;
 
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
 
 import com.zhouqing.EmoChat.R;
@@ -11,6 +13,8 @@ public class Global {
     public static final int PORT = 5222;
 
     public static final int AVATAR_NUM = 25;
+
+    public static final String SPNAME = "initializationInfo";
 
     public static Integer[] AVATARS = {
             R.drawable.avatar01,R.drawable.avatar02,R.drawable.avatar03,R.drawable.avatar04,R.drawable.avatar05,
@@ -29,5 +33,19 @@ public class Global {
 
     public static String accountToNickName(String account){
         return account.substring(0,account.indexOf("@"));
+    }
+
+    //写boolean类型值到sharedPreferences
+    public static void saveSpBoolean(Context context, String name, Boolean value){
+        SharedPreferences sp = context.getSharedPreferences(SPNAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        if(value != null)editor.putBoolean(name,value);
+        editor.commit();
+    }
+
+    //从sharedPreferences中读取boolean类型值
+    public static boolean getSPBoolean(Context context,String name){
+        SharedPreferences sp = context.getSharedPreferences(SPNAME, Context.MODE_PRIVATE);
+        return sp.getBoolean(name,false);
     }
 }

@@ -243,6 +243,15 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
 
         firePreview = (CameraSourcePreview) findViewById(R.id.firePreview);
 
+        //设置摄像头开关
+        boolean cameraOpen = Global.getSPBoolean(ChatActivity.this,"cameraOpen");
+        if(cameraOpen){
+            firePreview.setAlpha(1f);
+        }
+        else{
+            firePreview.setAlpha(0f);
+        }
+
         graphicOverlay = (GraphicOverlay) findViewById(R.id.fireFaceOverlay);
         if (graphicOverlay == null)
         {
@@ -758,10 +767,14 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
             SpannableString emotionContent = SpanStringUtil.getEmotionContent(EmotionUtil.EMOTION_CLASSIC_TYPE,
                     ChatActivity.this, holder.body, body);
             holder.body.setText(emotionContent);
-            if(!TextUtils.isEmpty(emotion)){
+
+            //设置表情的显示与否
+            boolean emotionOpen = Global.getSPBoolean(ChatActivity.this,"emotionOpen");
+            if(emotionOpen && !TextUtils.isEmpty(emotion)){
                 holder.emotion.setVisibility(View.VISIBLE);
                 holder.emotion.setText(emotion);
             }
+
 
 
             return convertView;
