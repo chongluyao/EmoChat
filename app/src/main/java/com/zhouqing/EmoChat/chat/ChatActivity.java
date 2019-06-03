@@ -570,8 +570,10 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
             int point = seqLength - 1;
             for (int i = characters.length - 1;i >= 0;i --) {
                 String s = String.valueOf(characters[i]);
-                vector[0][point] = appApplication.word2id.get(s);
-                point --;
+                if (appApplication.word2id.containsKey(s)) {
+                    vector[0][point] = appApplication.word2id.get(s);
+                    point--;
+                }
             }
             // get keep_prob
             float[] keep_prob = new float[1];
