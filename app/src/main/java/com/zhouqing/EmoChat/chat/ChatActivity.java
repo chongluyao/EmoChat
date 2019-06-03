@@ -152,6 +152,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
             String emotionShow = getEmotionContent(unionProbabilities);
             mPresenter.sendMessage(mClickAccount,"",emotion,emotionShow);
             startEntering = false;
+            imageEmotionList.clear();
             closeCameraPreview();
         }
         System.out.println("received:("+ typeName+ ")"+ Arrays.toString(event.getProbabilities()));
@@ -171,8 +172,12 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
         Log.d(TAG, "getUnionEmotion: " + answer_text[0] + " " + answer_text[1]);
         // union
         float[] answer = new float[2];
-        answer[0] = (answer_face[0] + answer_text[0]) / 2;
-        answer[1] = (answer_face[1] + answer_text[1]) / 2;
+        double h_face = - (answer_face[0]*Math.log(answer_face[0]) + answer_face[1]*Math.log(answer_face[1]));
+        double h_text = - (answer_text[0]*Math.log(answer_text[0]) + answer_text[1]*Math.log(answer_text[1]));
+        double weight_face = h_text / (h_face + h_text);
+        double weight_text = h_face / (h_face + h_text);
+        answer[0] = (float) (answer_face[0] * weight_face + answer_text[0] * weight_text);
+        answer[1] = (float) (answer_face[1] * weight_face + answer_text[1] * weight_text);
 
         Log.d(TAG, "getUnionEmotion: " + answer[0] + " " + answer[1]);
         return answer;
@@ -602,13 +607,6 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
         } catch (FirebaseMLException e) {
             e.printStackTrace();
         }
-
-
-        Random random = new Random();
-        float[] probabilities = new float[2];
-        probabilities[0] = random.nextFloat();
-        probabilities[1] = 1 - probabilities[0];
-        EventBus.getDefault().post(new ChatActivity.EmotionEvent(1,probabilities));
     }
 
 //    public void saveText(String message) {
