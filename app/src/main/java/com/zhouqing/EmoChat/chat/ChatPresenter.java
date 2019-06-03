@@ -85,7 +85,7 @@ public class ChatPresenter implements ChatContract.Presenter {
                     msg.setBody(body);
                     msg.setType(Message.Type.chat);
                     msg.setProperty("key", "value");
-
+                    msg.setProperty("emotion",emotionShow);
                     //发送消息 并保存消息 通过绑定服务调用服务中的方法
                     if (myBinder != null) {
                         myBinder.sendMessage(msg,facePic,type,emotionShow);

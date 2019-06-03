@@ -354,13 +354,14 @@ public class IMService extends Service {
         @Override
         public void processMessage(Chat chat, final Message message) {
             final String nickname = message.getFrom().substring(0, message.getFrom().indexOf("@"));
+            final String emotion = (String)message.getProperty("emotion");
 
             //收到消息 将消息缓存到本地 并显示通知
             ThreadUtil.runOnThread(new Runnable() {
                 @Override
                 public void run() {
                     //缓存消息
-                    saveMessage(getApplicationContext(), message, message.getFrom(), message.getTo(),"","","");
+                    saveMessage(getApplicationContext(), message, message.getFrom(), message.getTo(),"","",emotion);
                     ThreadUtil.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
