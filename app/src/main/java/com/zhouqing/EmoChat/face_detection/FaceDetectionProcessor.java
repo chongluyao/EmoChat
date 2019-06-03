@@ -202,9 +202,9 @@ public class FaceDetectionProcessor extends VisionProcessorBase<List<FirebaseVis
                                         float[] probabilities = output[0];
 
                                         // save
-                                        long prefix = System.currentTimeMillis();
-                                        saveBitmap(resized_newBitmap, prefix + "test.jpg");
-                                        saveText("" + probabilities[0] + " " + probabilities[1], prefix + "test.txt");
+                                        // long prefix = System.currentTimeMillis();
+                                        // saveBitmap(resized_newBitmap, prefix + "test.jpg");
+                                        // saveText("" + probabilities[0] + " " + probabilities[1], prefix + "test.txt");
                                         EventBus.getDefault().post(new ChatActivity.EmotionEvent(0,probabilities));
 
                                         Log.d(TAG, "onSuccess: " + System.currentTimeMillis());

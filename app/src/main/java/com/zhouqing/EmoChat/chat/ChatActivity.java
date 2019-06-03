@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -81,10 +82,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import androidx.annotation.RequiresApi;
+
+import static java.lang.Math.max;
+
+
 public class ChatActivity extends AppCompatActivity implements ChatContract.View, View.OnClickListener {
 
 
     List<float[]> imageEmotionList = new ArrayList<>();//一条句子期间的表情集合
+    float[] last_probability = new float[2];
+    float[][] A = new float[2][2];
+    float[] I = new float[2];
     public static class EmotionEvent{
         private int type;//0 表示图像 1表示文本
         private float[] probabilities;//概率数组，前者为正面情绪的概率，后者为负面情绪的概率
@@ -179,6 +188,14 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
         answer[0] = (float) (answer_face[0] * weight_face + answer_text[0] * weight_text);
         answer[1] = (float) (answer_face[1] * weight_face + answer_text[1] * weight_text);
 
+        // context
+        answer[0] = (float) (max(last_probability[0] * A[0][0], last_probability[1] * A[1][0]) * answer[0] / I[0]);
+        answer[1] = (float) (max(last_probability[0] * A[0][1], last_probability[1] * A[1][1]) * answer[1] / I[1]);
+
+        float sum = answer[0] + answer[1];
+        answer[0] = answer[0] / sum;
+        answer[1] = answer[1] / sum;
+        last_probability = answer;
         Log.d(TAG, "getUnionEmotion: " + answer[0] + " " + answer[1]);
         return answer;
     }
@@ -280,6 +297,16 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
     protected void initData() {
         mPresenter.getDialogueMessage(mClickAccount);
         startEntering = false;
+
+        A[0][0] = (float) 0.84810127;
+        A[0][1] = (float) 0.15189873;
+        A[1][0] = (float) 0.20425532;
+        A[1][1] = (float) 0.79574468;
+
+        I[0] = (float) 0.57831325;
+        I[1] = (float) 0.42168675;
+
+        last_probability = I;
     }
 
     protected void initListener() {
@@ -342,7 +369,7 @@ public class ChatActivity extends AppCompatActivity implements ChatContract.View
                     //iv_more.setVisibility(View.GONE);
                 }
                 if (!startEntering && getMessage().length() > 0) {
-                    showToast(getMessage());
+                    // showToast(getMessage());
                     openCameraPreview();
                     // EmoCameraManager.startCamera();
                     startEntering = true;
